@@ -4,7 +4,7 @@ genesis_block={
         'index':0,
         'transactions':[]
 }
-blockchain=[]
+blockchain=[genesis_block]
 open_transactions=[]
 owner='Hubert'
 
@@ -37,8 +37,13 @@ def add_transaction(recipient,sender=owner,amount=1.0):
 #Process open transactions
 def mine_block():
     last_block=blockchain[-1]
+    hashed_block=''
+    for key in last_block:
+        value=last_block[key]
+        hashed_block=hashed_block+str(value)
+
     block={
-        "previous_hash":'XYZ',
+        "previous_hash":hashed_block,
         'index':len(blockchain),
         'transactions':open_transactions
         }
@@ -46,7 +51,7 @@ def mine_block():
 
 # User Input
 def get_transaction_value():
-    """ Return the input of the use (a nwe transaciton amount) as a float"""
+    """ Return the input of the use (a nwe transaction amount) as a float"""
     tx_recipient=input("Enter the sender of the transactions:")
     tx_amount= float(input("Your transaction amount please: "))
     return tx_recipient, tx_amount
@@ -93,7 +98,8 @@ waiting_for_input=True
 while waiting_for_input:
     print("Please choose:")
     print("1: Add a new transaction value:")
-    print("2: Output the blockchain blocks")
+    print("2: Mine block")
+    print("3: Output the blockchain blocks")
     print("h: Manipulate the chain")
     print('q: Quit')
     user_choice=get_user_choice()
@@ -103,7 +109,9 @@ while waiting_for_input:
         add_transaction(recipient,amount=amount) 
         print(open_transactions)   
     elif user_choice=='2':
-        print_blockchain_elements()
+        mine_block()
+    elif user_choice=='3':
+        print_blockchain_elements()    
     elif user_choice=='h':
         if len(blockchain)>=1:
             blockchain[0]=[2]            
@@ -111,11 +119,11 @@ while waiting_for_input:
         waiting_for_input=False
     else:
         print("Input was invalid, please pick a value from the list!")
-    if  not verify_chain():
-        print_blockchain_elements()
-        print("Invalid blockchain")
+    # if  not verify_chain():
+    #     print_blockchain_elements()
+    #     print("Invalid blockchain")
 
-        break
+    #     break
 else:
     print("User left!")
 
