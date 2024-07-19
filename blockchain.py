@@ -8,6 +8,8 @@ blockchain=[genesis_block]
 open_transactions=[]
 owner='Hubert'
 
+def hash_block(block):
+    return '-'.join([str(block[key]) for key in block])
 
 # Last blockchain value
 def get_last_blockchain_value():
@@ -37,7 +39,7 @@ def add_transaction(recipient,sender=owner,amount=1.0):
 #Process open transactions
 def mine_block():
     last_block=blockchain[-1]
-    hashed_block='-'.join([str(last_block[key]) for key in last_block])
+    hashed_block=hash_block(last_block)
     block={
         "previous_hash":hashed_block,
         'index':len(blockchain),
@@ -65,29 +67,13 @@ def print_blockchain_elements():
         print('-'*20)
 
 def verify_chain():
-    is_valid=True
-    for block_index in range(len(blockchain)):
-        if block_index==0:            
+    """ Verify the current blockchain and return True if it is valid"""
+    for (index,block) in enumerate(blockchain):
+        if index == 0:
             continue
-        elif blockchain[block_index][0]==blockchain[block_index-1]:
-            print(block_index)
-            is_valid=True
-        else:
-            is_valid=False
-    return is_valid
-
-    # block_index=0
-    # is_valid=True
-    # for block in blockchain:
-    #     if block_index==0:
-    #         block_index+=1
-    #         continue
-    #     elif block[0]==blockchain[block_index-1]:
-    #         is_valid=True
-    #     else:
-    #         is_valid=False
-    #         break 
-    #     block_index+1
+        if block['previous_hash']!=hash_block(blockchain[index-1]):
+            return False
+    return True
 
 waiting_for_input=True
 
@@ -110,16 +96,19 @@ while waiting_for_input:
         print_blockchain_elements()    
     elif user_choice=='h':
         if len(blockchain)>=1:
-            blockchain[0]=[2]            
+            blockchain[0]={
+                "previous_hash":'',
+                'index':0,
+                'transactions':[{"sender":"Chris","recipient":"Max","amount":100}]
+            }           
     elif user_choice=='q':
         waiting_for_input=False
     else:
         print("Input was invalid, please pick a value from the list!")
-    # if  not verify_chain():
-    #     print_blockchain_elements()
-    #     print("Invalid blockchain")
-
-    #     break
+    if  not verify_chain():
+        print_blockchain_elements()
+        print("Invalid blockchain!!!")
+        break
 else:
     print("User left!")
 
