@@ -1,7 +1,13 @@
 # Initializing
+genesis_block={
+        "previous_hash":'',
+        'index':0,
+        'transactions':[]
+}
 blockchain=[]
 open_transactions=[]
 owner='Hubert'
+
 
 # Last blockchain value
 def get_last_blockchain_value():
@@ -30,7 +36,13 @@ def add_transaction(recipient,sender=owner,amount=1.0):
 
 #Process open transactions
 def mine_block():
-    block={}
+    last_block=blockchain[-1]
+    block={
+        "previous_hash":'XYZ',
+        'index':len(blockchain),
+        'transactions':open_transactions
+        }
+    blockchain.append(block)
 
 # User Input
 def get_transaction_value():
