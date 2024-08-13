@@ -1,16 +1,22 @@
-import functools
+from functools import reduce
 import hashlib
 import json
-# Initializing
+# The reward we give to miners
 MINING_REWARD=10
+
+# Starting block for the blockchain 
 genesis_block={
         "previous_hash":'',
         'index':0,
         'transactions':[]
 }
+# Initializing our blockchain list ()
 blockchain=[genesis_block]
+# Unhandlen transaction list
 open_transactions=[]
+# We are the owneh of this blockchain node
 owner='Hubert'
+# Registered participants: Ourselfs + other people sending/receiving coins
 participant={'Hubert'}
 
 def hash_block(block):
@@ -22,6 +28,23 @@ def hash_block(block):
     return hashlib.sha256(json.dumps(block).encode()).hexdigest()
     
 
+
+def valid_proof(transactions,last_hash,proof_number):
+    guess = (str(transactions)+str(last_hash)+str(proof_number)).encode()
+    guess_hash=hashlib.sha256(guess).hexdigest()
+    print(guess_hash)
+    return guess_hash[0:2] =='00'
+    
+def proof_of_work():
+    last_block=blockchain[-1]
+    last_hash=hash_block(last_block)
+    proof = 0
+    while valid_proof(open_transactions,last_hash,proof):
+        proof+=1
+    return proof
+
+
+
 def get_balance(participant):
     """Calculate and return the balance for a participant"""
 
@@ -29,10 +52,10 @@ def get_balance(participant):
     open_tx_sender=[tx['amount'] for tx in open_transactions if tx['sender']==participant]
     
     tx_sender.append(open_tx_sender)
-    amount_sent=functools.reduce(lambda tx_sum,tx_amt: tx_sum+sum(tx_amt) if len(tx_amt)>0 else tx_sum+0,tx_sender,0)
+    amount_sent=reduce(lambda tx_sum,tx_amt: tx_sum+sum(tx_amt) if len(tx_amt)>0 else tx_sum+0,tx_sender,0)
 
     tx_recipient=[[tx['amount'] for tx  in block['transactions'] if tx['recipient']==participant] for block in blockchain]
-    amount_received=functools.reduce(lambda tx_sum,tx_amt: tx_sum+sum(tx_amt) if len(tx_amt)>0 else tx_sum+0,tx_recipient,0)
+    amount_received=reduce(lambda tx_sum,tx_amt: tx_sum+sum(tx_amt) if len(tx_amt)>0 else tx_sum+0,tx_recipient,0)
     return amount_received-amount_sent
 
 # Last blockchain value
