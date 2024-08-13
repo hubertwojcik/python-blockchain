@@ -8,7 +8,8 @@ MINING_REWARD=10
 genesis_block={
         "previous_hash":'',
         'index':0,
-        'transactions':[]
+        'transactions':[],
+        'proof':100
 }
 # Initializing our blockchain list ()
 blockchain=[genesis_block]
@@ -39,23 +40,35 @@ def proof_of_work():
     last_block=blockchain[-1]
     last_hash=hash_block(last_block)
     proof = 0
-    while valid_proof(open_transactions,last_hash,proof):
+    while not valid_proof(open_transactions,last_hash,proof):
         proof+=1
     return proof
 
 
 
 def get_balance(participant):
-    """Calculate and return the balance for a participant"""
+    """Calculate and return the balance for a participant.
 
+    Arguments:
+        :participant: The person for whom to calculate the balance.
+    """
+    # Fetch a list of all sent coin amounts for the given person (empty lists are returned if the person was NOT the sender)
+    # This fetches sent amounts of transactions that were already included in blocks of the blockchain
+   
     tx_sender=[[tx['amount'] for tx  in block['transactions'] if tx['sender']==participant] for block in blockchain]
+  
+    # Fetch a list of all sent coin amounts for the given person (empty lists are returned if the person was NOT the sender)
+    # This fetches sent amounts of open transactions (to avoid double spending)
+   
     open_tx_sender=[tx['amount'] for tx in open_transactions if tx['sender']==participant]
     
     tx_sender.append(open_tx_sender)
     amount_sent=reduce(lambda tx_sum,tx_amt: tx_sum+sum(tx_amt) if len(tx_amt)>0 else tx_sum+0,tx_sender,0)
-
+    # This fetches received coin amounts of transactions that were already included in blocks of the blockchain
+    # We ignore open transactions here because you shouldn't be able to spend coins before the transaction was confirmed + included in a block
     tx_recipient=[[tx['amount'] for tx  in block['transactions'] if tx['recipient']==participant] for block in blockchain]
     amount_received=reduce(lambda tx_sum,tx_amt: tx_sum+sum(tx_amt) if len(tx_amt)>0 else tx_sum+0,tx_recipient,0)
+    # Return the total balance
     return amount_received-amount_sent
 
 # Last blockchain value
@@ -66,12 +79,20 @@ def get_last_blockchain_value():
     return blockchain[-1]
 
 def verify_transaction(transaction):
-    print(transaction)
+    """Verify a transaction by checking whether the sender has sufficient coins.
+
+    Arguments:
+        :transaction: The transaction that should be verified.
+    """
     sender_balance = get_balance(transaction['sender'])
     return sender_balance>= transaction['amount']        
     
 
-# Add Value to block chain
+# This function accepts two arguments.
+# One required one (transaction_amount) and one optional one (last_transaction)
+# The optional one is optional because it has a default value => [1]
+
+
 def add_transaction(recipient,sender=owner,amount=1.0):
     """ Append a new value as well as the last blockchain value to the blockchain
     
@@ -96,20 +117,27 @@ def add_transaction(recipient,sender=owner,amount=1.0):
 
 #Process open transactions
 def mine_block():
+    """Create a new block and add open transactions to it."""
+    # Fetch the currently las block of the blockchain
     last_block=blockchain[-1]
+    # Hash the last block => to be able to compare it to the stored hash
     hashed_block=hash_block(last_block)
-    print(hashed_block)
+    proof = proof_of_work()
+    # Mines shoudl be rewarded, so let's create a reward
     reward_transaction={
         "sender":'MINING',
         "recipient":owner,
         "amount":MINING_REWARD
     }
+    # Copy transation instaead of manipulating the original open_transactions
+    # This ensures that if for some reason the mining should fail, we don't have the reward transaction stored in the open transactions
     copied_transactions=open_transactions[:]
     copied_transactions.append(reward_transaction)
     block={
         "previous_hash":hashed_block,
         'index':len(blockchain),
-        'transactions':copied_transactions
+        'transactions':copied_transactions,
+        'proof':proof
         }
     blockchain.append(block)
     return True
@@ -117,6 +145,7 @@ def mine_block():
 # User Input
 def get_transaction_value():
     """ Return the input of the use (a nwe transaction amount) as a float"""
+    # Get the user input, transform it from a string to a float and store it in user_input
     tx_recipient=input("Enter the sender of the transactions:")
     tx_amount= float(input("Your transaction amount please: "))
     return tx_recipient, tx_amount
@@ -127,6 +156,8 @@ def get_user_choice():
     return user_input
 
 def print_blockchain_elements():
+    """ Output all blocks of the blockchain. """
+    # Output the blockchain list to the console
     for block in blockchain:
         print("Outputting Block")
         print(block)
@@ -139,6 +170,8 @@ def verify_chain():
         if index == 0:
             continue
         if block['previous_hash']!=hash_block(blockchain[index-1]):
+            return False
+        if not valid_proof(block['transactions'][:-1],block['previous_hash'],block['proof']):
             return False
     return True
 
