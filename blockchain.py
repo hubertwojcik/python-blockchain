@@ -2,7 +2,7 @@ from functools import reduce
 from collections import OrderedDict
 
 import json
-import pickle
+# import pickle
 from hash_util import hash_block,hash_string_256
 
 # The reward we give to miners
@@ -25,38 +25,38 @@ owner='Hubert'
 participant={'Hubert'}
 
 def load_data():
-    with open('blockchain.p', mode='rb') as f:
-        file_content=pickle.loads(f.read())
-        print(file_content)
+    # with open('blockchain.p', mode='rb') as f:
+    #     file_content=pickle.loads(f.read())
+    #     print(file_content)
         
+    #     global blockchain
+    #     global open_transactions
+    #     blockchain=file_content['chain']
+    #     open_transactions=file_content['ot']
+    with open('blockchain.txt', mode='r') as f:
+        file_content = f.readlines()
         global blockchain
         global open_transactions
-        blockchain=file_content['chain']
-        open_transactions=file_content['ot']
-    # with open('blockchain.txt', mode='r') as f:
-        # file_content = f.readlines()
-        # global blockchain
-        # global open_transactions
-        # # Reads without last sign, becaiuse it is\n
-        # blockchain = json.loads(file_content[0][:-1])
-        # updated_blockchain = []
-        # for block in blockchain:
-        #     updated_block = {
-        #         'previous_hash': block['previous_hash'],
-        #         'index': block['index'],
-        #         'proof': block['proof'],
-        #         'transactions': [OrderedDict(
-        #             [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
-        #     }
-        #     updated_blockchain.append(updated_block)
-        # blockchain = updated_blockchain
-        # open_transactions = json.loads(file_content[1])
-        # updated_transactions = []
-        # for tx in open_transactions:
-        #     updated_transaction = OrderedDict(
-        #         [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
-        #     updated_transactions.append(updated_transaction)
-        # open_transactions = updated_transactions
+        # Reads without last sign, becaiuse it is\n
+        blockchain = json.loads(file_content[0][:-1])
+        updated_blockchain = []
+        for block in blockchain:
+            updated_block = {
+                'previous_hash': block['previous_hash'],
+                'index': block['index'],
+                'proof': block['proof'],
+                'transactions': [OrderedDict(
+                    [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])]) for tx in block['transactions']]
+            }
+            updated_blockchain.append(updated_block)
+        blockchain = updated_blockchain
+        open_transactions = json.loads(file_content[1])
+        updated_transactions = []
+        for tx in open_transactions:
+            updated_transaction = OrderedDict(
+                [('sender', tx['sender']), ('recipient', tx['recipient']), ('amount', tx['amount'])])
+            updated_transactions.append(updated_transaction)
+        open_transactions = updated_transactions
 
 
 
@@ -64,16 +64,16 @@ def load_data():
 load_data()
 
 def save_data():
-    # with open('blockchain.txt',mode='w') as f:
-    #    f.write(json.dumps(blockchain))
-    #    f.write("\n")
-    #    f.write(json.dumps(open_transactions))
-    with open('blockchain.p',mode='wb') as f:
-        save_data={
-            'chain':blockchain,
-            "ot":open_transactions
-        }
-        f.write(pickle.dumps(save_data))
+    with open('blockchain.txt',mode='w') as f:
+       f.write(json.dumps(blockchain))
+       f.write("\n")
+       f.write(json.dumps(open_transactions))
+    # with open('blockchain.p',mode='wb') as f:
+    #     save_data={
+    #         'chain':blockchain,
+    #         "ot":open_transactions
+    #     }
+    #     f.write(pickle.dumps(save_data))
 
 def valid_proof(transactions,last_hash,proof_number):
     guess = (str(transactions)+str(last_hash)+str(proof_number)).encode()
