@@ -1,6 +1,6 @@
 from collections import OrderedDict
-
-class Transaction:
+from printable import Printable
+class Transaction(Printable):
     def __init__(self,sender,recipient,amount):
         self.sender=sender
         self.recipient=recipient
@@ -8,3 +8,4 @@ class Transaction:
     
     def to_order_dict(self):
         return OrderedDict([('sender',self.sender),('recipient',self.recipient),('amount',self.amount)])
+    
