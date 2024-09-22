@@ -18,11 +18,19 @@ class Blockchain:
         # Our starting block for the blockchain
         genesis_block = Block(0, '', [], 100, 0)
         # Initializing our (empty) blockchain list
-        self.__chain=[genesis_block]
+        self.chain=[genesis_block]
         # Unhandled transactions
         self.__open_transactions=[]
         self.load_data()
         self.hosting_node=hosting_node_id
+
+    @property
+    def chain(self):
+        return self.__chain[:]
+
+    @chain.setter
+    def chain(self,val):
+        self.__chain=val
 
     def get_chain(self):
         return self.__chain[:]
@@ -47,7 +55,7 @@ class Blockchain:
                     updated_block = Block(
                         block['index'], block['previous_hash'], converted_tx, block['proof'], block['timestamp'])
                     updated_blockchain.append(updated_block)
-                self.__chain = updated_blockchain
+                self.chain = updated_blockchain
                 open_transactions = json.loads(file_content[1])
                 # We need to convert  the loaded data because Transactions should use OrderedDict
                 updated_transactions = []
