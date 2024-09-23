@@ -39,11 +39,20 @@ class Wallet:
 
     def generate_keys(self):
         private_key=RSA.generate(1024,Crypto.Random.new().read)
-        public_key=private_key.publickey()
-        return (binascii.hexlify(private_key.exportKey(format="DER")).decode('ascii'),binascii.hexlify(public_key.exportKey(format="DER")).decode('ascii'))
+        public_key=private_key.public_key()
+        return (binascii.hexlify(private_key.export_key(format="DER")).decode('ascii'),binascii.hexlify(public_key.export_key(format="DER")).decode('ascii'))
     
     def sign_transaction(self,sender,recipient,amount):
-        signer=PKCS1_v1_5.new(RSA.importKey(binascii.unhexlify(self.private_key)))
+        signer=PKCS1_v1_5.new(RSA.import_key(binascii.unhexlify(self.private_key)))
         hashed_transaction_data = SHA256.new((str(sender)+ str(recipient)+str(amount)).encode('utf8'))
         signature = signer.sign(hashed_transaction_data)
         return binascii.hexlify(signature).decode('ascii')
+    
+    @staticmethod
+    def verify_transaction(transaction):
+        if transaction.sender =="MINING":
+            return True
+        public_key = RSA.import_key(binascii.unhexlify(transaction.sender))
+        verifier = PKCS1_v1_5.new(public_key)
+        hashed_transaction_data = SHA256.new((str(transaction.sender)+ str(transaction.recipient)+str(transaction.amount)).encode('utf8'))
+        return verifier.verify(hashed_transaction_data,binascii.unhexlify(transaction.signature))
